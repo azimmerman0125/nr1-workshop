@@ -5,7 +5,7 @@ export default class Lab2Nerdlet extends React.Component {
 
     constructor(props) {
         super(props);
-        this.accountId = <REPLACE_WITH_YOUR_ACCOUNT_ID>;
+        this.accountId = 1899074;
         this.state = {
             entityGuid: null,
             appName: null
@@ -25,53 +25,62 @@ export default class Lab2Nerdlet extends React.Component {
         const apdexNrql = `SELECT apdex(duration) FROM Transaction WHERE entityGuid = '${entityGuid}' TIMESERIES`;
 
         //return the JSX we're rendering
-        return (<ChartGroup>
-            <Stack
-                verticalType={Stack.VERTICAL_TYPE.FILL}
-                directionType={Stack.DIRECTION_TYPE.VERTICAL}
-                gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
-                <StackItem>
-                    <Stack
-                        horizontalType={Stack.HORIZONTAL_TYPE.FILL}
-                        directionType={Stack.DIRECTION_TYPE.HORIZONTAL}
-                        gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
-                        <StackItem>
-                            <TableChart query={nrql} accountId={this.accountId} className="chart" onClickTable={(dataEl, row, chart) => {
-                            //for learning purposes, we'll write to the console.
-                            console.debug([dataEl, row, chart]) //eslint-disable-line
-                            this.setApplication(row.entityGuid, row.appName)
-                        }}/>
-                        </StackItem>
-                        <StackItem>
-                            <LineChart
-                                query={trxOverT}
-                                className="chart"
-                                accountId={this.accountId}
-                                onClickLine={(line) => {
-                                    //more console logging for learning purposes
-                                    console.debug(line); //eslint-disable=line
-                                    const params = line.metadata.label.split(",");
-                                    this.setApplication(params[1], params[0]);
-                                }}
-                            />
-                        </StackItem>
+        return <PlatformStateContext.Consumer>
+            {(platformUrlState) => {
+                //console.debug here for learning purposes
+                console.debug(platformUrlState);
+                const {duration } = platformUrlState.timeRange;
+                const since = ` SINCE ${duration/60/1000} MINUTES AGO`;
+
+            return (<ChartGroup>
+                <Stack
+                    verticalType={Stack.VERTICAL_TYPE.FILL}
+                    directionType={Stack.DIRECTION_TYPE.VERTICAL}
+                    gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
+                    <StackItem>
+                        <Stack
+                            horizontalType={Stack.HORIZONTAL_TYPE.FILL}
+                            directionType={Stack.DIRECTION_TYPE.HORIZONTAL}
+                            gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
+                            <StackItem>
+                                <TableChart query={nrql+since} accountId={this.accountId} className="chart" onClickTable={(dataEl, row, chart) => {
+                                //for learning purposes, we'll write to the console.
+                                console.debug([dataEl, row, chart]) //eslint-disable-line
+                                this.setApplication(row.entityGuid, row.appName)
+                            }}/>
+                            </StackItem>
+                            <StackItem>
+                                <LineChart
+                                    query={trxOverT+since}
+                                    className="chart"
+                                    accountId={this.accountId}
+                                    onClickLine={(line) => {
+                                        //more console logging for learning purposes
+                                        console.debug(line); //eslint-disable=line
+                                        const params = line.metadata.label.split(",");
+                                        this.setApplication(params[1], params[0]);
+                                    }}
+                                />
+                            </StackItem>
+                        </Stack>
+                    </StackItem>
+                    {entityGuid  && <StackItem>
+                        <Stack
+                            directionType={Stack.DIRECTION_TYPE.HORIZONTAL}
+                            gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
+                            <StackItem>
+                                <h2>Transaction counts for {appName}</h2>
+                                <LineChart accountId={this.accountId} query={tCountNrql+since} className="chart"/>
+                            </StackItem>
+                            <StackItem>
+                                <h2>Apdex for {appName}</h2>
+                                <ScatterChart accountId={this.accountId} query={apdexNrql+since} className="chart"/>
+                            </StackItem>
+                        </Stack>
+                    </StackItem>}
                     </Stack>
-                </StackItem>
-                {entityGuid  && <StackItem>
-                    <Stack
-                        directionType={Stack.DIRECTION_TYPE.HORIZONTAL}
-                        gapType={Stack.GAP_TYPE.EXTRA_LOOSE}>
-                        <StackItem>
-                            <h2>Transaction counts for {appName}</h2>
-                            <LineChart accountId={this.accountId} query={tCountNrql} className="chart"/>
-                        </StackItem>
-                        <StackItem>
-                            <h2>Apdex for {appName}</h2>
-                            <ScatterChart accountId={this.accountId} query={apdexNrql} className="chart"/>
-                        </StackItem>
-                    </Stack>
-                </StackItem>}
-                </Stack>
-            </ChartGroup>);
+                </ChartGroup>);
+            }}
+        </PlatformStateContext.Consumer>
     }
 }
