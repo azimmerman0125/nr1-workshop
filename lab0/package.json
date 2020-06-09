@@ -7,10 +7,6 @@
     "start": "nr1 nerdpack:serve",
     "test": "exit 0"
   },
-  "nr1": {
-    "uuid": "61ab8ae4-6a51-451e-9453-50c02bd6aadd",
-    "sdkVersion": 2
-  },
   "dependencies": {
     "prop-types": "^15.6.2",
     "react": "^16.6.3",
